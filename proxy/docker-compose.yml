@@ -1,0 +1,15 @@
+version: '2'
+
+services:
+  proxy:
+    image: nginx:latest
+    ports:
+    - "80:80"
+    volumes:
+    - ./conf.d:/etc/nginx/conf.d
+    restart: always
+
+networks:
+  default:
+    external:
+      name: common_link

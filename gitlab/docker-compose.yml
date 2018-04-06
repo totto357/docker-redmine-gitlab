@@ -1,0 +1,72 @@
+version: '2'
+
+services:
+  redis:
+    image: sameersbn/redis:latest
+    command:
+    - --loglevel warning
+    volumes:
+    - /srv/docker/gitlab/redis:/var/lib/redis
+    networks:
+    - default
+    restart: always
+
+  postgresql:
+    image: sameersbn/postgresql:9.6-2
+    volumes:
+    - /srv/docker/gitlab/postgresql:/var/lib/postgresql
+    environment:
+    - DB_USER=gitlab
+    - DB_PASS=password
+    - DB_NAME=gitlabhq_production
+    - DB_EXTENSION=pg_trgm
+    networks:
+    - default
+    restart: always
+
+  gitlab:
+    image: sameersbn/gitlab:10.5.1
+    container_name: gitlab
+    depends_on:
+    - redis
+    - postgresql
+    volumes:
+    - /srv/docker/gitlab/gitlab:/home/git/data
+    networks:
+    - default
+    - common_link
+    restart: always
+    environment:
+    - DEBUG=false
+
+    - DB_ADAPTER=postgresql
+    - DB_HOST=postgresql
+    - DB_PORT=5432
+    - DB_USER=gitlab
+    - DB_PASS=password
+    - DB_NAME=gitlabhq_production
+
+    - REDIS_HOST=redis
+    - REDIS_PORT=6379
+
+    - TZ=Asia/Tokyo
+    - GITLAB_TIMEZONE=Tokyo
+
+    - GITLAB_RELATIVE_URL_ROOT=/gitlab
+    - GITLAB_SECRETS_DB_KEY_BASE=long-and-random-alphanumeric-string
+    - GITLAB_SECRETS_SECRET_KEY_BASE=long-and-random-alphanumeric-string
+    - GITLAB_SECRETS_OTP_KEY_BASE=long-and-random-alphanumeric-string
+
+    - GITLAB_ROOT_PASSWORD=hogehoge
+    - GITLAB_ROOT_EMAIL=hoge@hoge.com
+
+    - OAUTH_CAS3_LABEL=cas3
+    - OAUTH_CAS3_SERVER=
+    - OAUTH_CAS3_DISABLE_SSL_VERIFICATION=false
+    - OAUTH_CAS3_LOGIN_URL=/cas/login
+    - OAUTH_CAS3_VALIDATE_URL=/cas/p3/serviceValidate
+    - OAUTH_CAS3_LOGOUT_URL=/cas/logout
+
+networks:
+  common_link:
+    external: true
